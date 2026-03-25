@@ -1,0 +1,47 @@
+{
+  description = "NixOS Configuration for Dell G5";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v0.4.3";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    zen-browser.url = "github:0xc000022070/zen-browser-flake";
+  };
+
+  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, ... }@inputs: {
+    nixosConfigurations.zeus = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit inputs; };
+      modules = [
+        ./configuration.nix
+
+        {
+          nixpkgs.overlays = [
+            nix-cachyos-kernel.overlays.pinned
+          ];
+        }
+        
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.extraSpecialArgs = {inherit inputs;};
+          home-manager.users.sungold = import ./home.nix;
+        }
+
+        lanzaboote.nixosModules.lanzaboote
+
+      ];
+    };
+  };
+}
