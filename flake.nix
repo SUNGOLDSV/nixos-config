@@ -16,10 +16,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
+
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
   };
 
-  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, ... }@inputs: {
+  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, nix-flatpak, ... }@inputs: {
     nixosConfigurations.zeus = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs; };
       modules = [
@@ -41,6 +43,7 @@
 
         lanzaboote.nixosModules.lanzaboote
 
+        nix-flatpak.nixosModules.nix-flatpak
       ];
     };
   };
