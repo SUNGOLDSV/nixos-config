@@ -188,6 +188,19 @@
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
+    package = pkgs.steam.override {
+      extraProfile = ''
+        # Allows WiVRn to be detected by Steam games
+        export PRESSURE_VESSEL_IMPORT_OPENXR_1_RUNTIMES=1
+      '';
+    };
+  };
+
+  # --- VR support ---
+  services.wivrn = {
+    enable = true;
+    openFirewall = true;
+    defaultRuntime = true;
   };
 
   # --- ZSWAP Device ---

@@ -78,6 +78,19 @@
     mp.add_key_binding("b", "get_rd_subs", get_rd_subs)
   '';
 
+  # --- For openvr games opencomposite
+  xdg.configFile."openvr/openvrpaths.vrpath".text = let
+    steam = "${config.xdg.dataHome}/Steam";
+  in builtins.toJSON {
+    version = 1;
+    jsonid = "vrpathreg";
+    external_drivers = null;
+    config = [ "${steam}/config" ];
+    log = [ "${steam}/logs" ];
+    # Points OpenVR games to OpenComposite instead of SteamVR
+    runtime = [ "${pkgs.opencomposite}/lib/opencomposite" ];
+  };
+
   # The state version is required and should stay stable
   home.stateVersion = "25.05"; 
   programs.home-manager.enable = true;
