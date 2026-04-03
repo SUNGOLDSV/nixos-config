@@ -6,6 +6,8 @@
 
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
 
+    swift-flake.url = "github:timothyklim/swift-flake";
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -21,7 +23,7 @@
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
   };
 
-  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, nix-flatpak, ... }@inputs: {
+  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, nix-flatpak, swift-flake, ... }@inputs: {
     nixosConfigurations.zeus = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs; };
       modules = [
@@ -30,6 +32,7 @@
         {
           nixpkgs.overlays = [
             nix-cachyos-kernel.overlays.pinned
+            (import ./soulver-overlay.nix { inherit swift-flake; })
           ];
         }
         
