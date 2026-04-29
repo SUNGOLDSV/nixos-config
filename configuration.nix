@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 {
   imports =
@@ -57,7 +57,7 @@
     };
 
     # --- Initrd & Kernel ---
-    kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
+    kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-x86_64-v3;
     kernelModules = [ "ntsync" ];
     consoleLogLevel = 0;
     initrd.verbose = false;
@@ -153,11 +153,14 @@
     bind
     whois
     mesa-demos
-    p7zip
+    _7zip-zstd
     kdePackages.partitionmanager
     gptfdisk
     parted
     ffmpeg
+
+    inputs.jovian-nixos.legacyPackages.${pkgs.system}.dmemcg-booster
+    inputs.jovian-nixos.legacyPackages.${pkgs.system}.plasma-foreground-booster
   ];
 
   # For keeb
@@ -235,6 +238,20 @@
     curl
     expat
   ];
+
+  # --- dmemcg VRAM Optimization ---
+  systemd.packages = [
+    inputs.jovian-nixos.legacyPackages.${pkgs.system}.dmemcg-booster
+    inputs.jovian-nixos.legacyPackages.${pkgs.system}.plasma-foreground-booster
+  ];
+
+  systemd.services.dmemcg-booster-system = {
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.user.services.dmemcg-booster-user = {
+    wantedBy = [ "graphical-session-pre.target" ];
+  };
 
   # --- Standard stuff ---
   nix.settings.experimental-features = [ "nix-command" "flakes" ];

@@ -21,9 +21,11 @@
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
 
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
+
+    jovian-nixos.url = "github:Jovian-Experiments/Jovian-NixOS/development";
   };
 
-  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, nix-flatpak, swift-flake, ... }@inputs: {
+  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, nix-flatpak, swift-flake, jovian-nixos, ... }@inputs: {
     nixosConfigurations.zeus = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs; };
       modules = [
