@@ -23,9 +23,11 @@
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
 
     jovian-nixos.url = "github:Jovian-Experiments/Jovian-NixOS/development";
+
+    opencode.url = "github:anomalyco/opencode/dev";
   };
 
-  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, nix-flatpak, swift-flake, jovian-nixos, ... }@inputs: {
+  outputs = { self, nixpkgs, nix-cachyos-kernel, home-manager, lanzaboote, nix-flatpak, swift-flake, jovian-nixos, opencode, ... }@inputs: {
     nixosConfigurations.zeus = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs; };
       modules = [
@@ -35,6 +37,7 @@
           nixpkgs.overlays = [
             nix-cachyos-kernel.overlays.pinned
             (import ./soulver-overlay.nix { inherit swift-flake; })
+            opencode.overlays.default
           ];
         }
         

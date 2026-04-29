@@ -205,6 +205,13 @@
     openFirewall = true;
   };
 
+  services.sunshine = {
+    enable = true;
+    capSysAdmin = true;
+    autoStart = false;
+    openFirewall = true;
+  };
+
   # --- ZSWAP Device ---
   fileSystems."/swap" = {
     device = "/dev/disk/by-uuid/0ae15a10-33cf-4d69-a3df-b8b635dd902e";
