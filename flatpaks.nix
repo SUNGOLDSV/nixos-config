@@ -4,6 +4,7 @@
   services.flatpak = {
     enable = true;
     uninstallUnmanaged = true;
+    uninstallUnused = true;
     
     # EXPLICITLY list both, first one is usually the default search target
     remotes = [
@@ -19,26 +20,13 @@
 
     packages = [
       "com.discordapp.Discord"
-      {appId = "com.stremio.Stremio"; origin = "flathub-beta";}
+      {appId = "com.stremio.Stremio"; origin = "flathub";}
       "us.zoom.Zoom"
       "it.mijorus.gearlever"
+      "it.mijorus.gearlever.Locale"
       "com.spotify.Client"
+      "org.jeffvli.feishin"
+      "com.mongodb.Compass"
     ];
-  };
-
-  # Weekly Cleanup Service
-  systemd.services.flatpak-cleanup = {
-    description = "Cleanup unused Flatpak runtimes";
-    script = "${pkgs.flatpak}/bin/flatpak uninstall --unused --noninteractive";
-    serviceConfig.Type = "oneshot";
-  };
-
-  systemd.timers.flatpak-cleanup = {
-    description = "Weekly Flatpak garbage collection";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "weekly";
-      Persistent = true;
-    };
   };
 }
