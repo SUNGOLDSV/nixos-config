@@ -111,9 +111,22 @@
   i18n.defaultLocale = "en_CA.UTF-8";
 
   # --- DESKTOP (KDE Plasma) ---
-  services.displayManager.plasma-login-manager.enable = true;
+  services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
+  services.displayManager.defaultSession = "aerothemeplasma";
   environment.sessionVariables.NIXOS_OZONE_WL = "1"; # Enable wayland for ozone/electron
+
+  programs.aeroshell = {
+    enable = true;
+    fonts.segoe.enable = true;
+    polkit.enable = true;
+    sessions.x11.enable = false;
+    aerothemeplasma = {
+      enable = true;
+      sddm.enable = true;
+      plymouth.enable = true;
+    };
+  };
 
   # --- AUDIO (Pipewire) ---
   services.pulseaudio.enable = false;
