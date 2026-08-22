@@ -6,6 +6,7 @@
       ./hardware-configuration.nix
       ./flatpaks.nix
       #./kdefix.nix
+      ./sunshine.nix
     ];
 
   # --- NixOS Garbage Collection ---
@@ -205,12 +206,6 @@
     openFirewall = true;
   };
 
-  services.sunshine = {
-    enable = true;
-    capSysAdmin = true;
-    autoStart = false;
-    openFirewall = true;
-  };
 
   # --- ZSWAP Device ---
   fileSystems."/swap" = {
