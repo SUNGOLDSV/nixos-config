@@ -2,34 +2,33 @@
 
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
       ./hardware-configuration.nix
       ./flatpaks.nix
       #./kdefix.nix
       ./sunshine.nix
     ];
 
-  # --- NixOS Garbage Collection ---
-  nix.gc = { 
-    automatic = true;
-    persistent = true;
-    dates = "05:00:00";
-    options = "--delete-older-than 30d";
+  # --- NixOS Garbage Collection & nh ---
+  programs.nh = {
+    enable = true;
+    clean.enable = true;
+    clean.extraArgs = "--keep-since 4d --keep 3";
+    flake = "/home/sungold/nixos-config";
   };
 
-  # --- SNVME Mount ---
   fileSystems."/mnt/snvme" = {
     device = "/dev/disk/by-label/SNVME";
     fsType = "btrfs";
     options = [ "compress=zstd" "noatime" "nofail"];
   };
 
-  # --- Virtualization ---
   virtualisation.docker.enable = true;
   virtualisation.libvirtd.enable = true;
   programs.virt-manager.enable = true;
 
-  # --- SSH ACCESS ---
+  services.tailscale.enable = true;
+
   services.openssh = {
     enable = true;
     settings = {
@@ -38,12 +37,17 @@
     };
   };
 
-  # --- BOOTLOADER ---
   nix.settings = {
     substituters = [ "https://attic.xuyh0120.win/lantian" ]; # CachyOS kernel binary cache
     trusted-public-keys = [ "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc=" ];
   };
-  boot.kernel.sysctl."kernel.sysrq" = 1; # REISUB Magic SysRq
+
+  boot.kernel.sysctl = {
+    "kernel.sysrq" = 1;
+    "net.core.default_qdisc" = "fq";
+    "net.ipv4.tcp_congestion_control" = "bbr";
+  };
+
   boot = {
     # Disable standard systemd-boot to use Lanzaboote
     loader.systemd-boot.enable = false;
@@ -51,13 +55,11 @@
     loader.timeout = 0;                  # Skip menu (hold Space to show)
     loader.systemd-boot.editor = false;  # Enable to use cmdline editing
 
-    # Enable Lanzaboote
     lanzaboote = {
       enable = true;
       pkiBundle = "/var/lib/sbctl";
     };
 
-    # --- Initrd & Kernel ---
     kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-x86_64-v3;
     kernelModules = [ "ntsync" ];
     consoleLogLevel = 0;
@@ -66,10 +68,9 @@
     initrd.systemd.enable = true;  # Needed for TPM Unlock
     initrd.availableKernelModules = [ "tpm_crb" "tpm_tis" ]; # AMD fTPM
 
-    # --- Silent Boot ---
     plymouth = {
       enable = true;
-      theme = "bgrt";
+      #theme = "bgrt";
     };
 
     kernelParams = [
@@ -80,41 +81,34 @@
       "rd.udev.log_level=3"
       "udev.log_priority=3"
       "zswap.enabled=1"
-      "zswap.compressor=zstd" 
+      "zswap.compressor=zstd"
       "zswap.zpool=zsmalloc"
     ];
   };
 
-  # --- NETWORKING ---
+  hardware.amdgpu.overdrive.enable = true;
+
   hardware.bluetooth.enable = true;
   networking.hostName = "zeus";
   networking.networkmanager = {
     enable = true;
-    # GUI plugin for OpenConnect
     plugins = with pkgs; [ networkmanager-openconnect ];
   };
-  # --- KDE CONNECT ---
+
   programs.kdeconnect.enable = true;
 
   networking.firewall = {
     enable = true;
     trustedInterfaces = [ "virbr0" ];
-    allowedTCPPortRanges = [
-      { from = 1714; to = 1764; }
-    ];
-    allowedUDPPortRanges = [
-      { from = 1714; to = 1764; }
-    ];
   };
-  # --- TIME & LOCALE ---
+
   time.timeZone = "America/Toronto";
   i18n.defaultLocale = "en_CA.UTF-8";
 
-  # --- DESKTOP (KDE Plasma) ---
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
   services.displayManager.defaultSession = "aerothemeplasma";
-  environment.sessionVariables.NIXOS_OZONE_WL = "1"; # Enable wayland for ozone/electron
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
   programs.aeroshell = {
     enable = true;
@@ -128,7 +122,6 @@
     };
   };
 
-  # --- AUDIO (Pipewire) ---
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
@@ -138,16 +131,14 @@
     pulse.enable = true;
   };
 
-  # --- USER ACCOUNT ---
   users.users.sungold = {
     isNormalUser = true;
     description = "Suraaj Vashisht";
-    extraGroups = [ "networkmanager" "wheel" "docker" "gamemode" "plugdev" "libvirtd" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "gamemode" "plugdev" "libvirtd" "input" ];
   };
 
   users.groups.plugdev = {};
 
-  # --- SYSTEM PACKAGES ---
   nixpkgs.config.allowUnfree = true;
   environment.systemPackages = with pkgs; [
     vim
@@ -162,6 +153,7 @@
     e2fsprogs
     rivalcfg
     usbutils
+    pciutils
     freetype
     dnsmasq
     bind
@@ -172,9 +164,11 @@
     gptfdisk
     parted
     ffmpeg
+    virtiofsd
+    ryzenadj
 
-    inputs.jovian-nixos.legacyPackages.${pkgs.system}.dmemcg-booster
-    inputs.jovian-nixos.legacyPackages.${pkgs.system}.plasma-foreground-booster
+    inputs.jovian-nixos.legacyPackages.${pkgs.stdenv.hostPlatform.system}.dmemcg-booster
+    inputs.jovian-nixos.legacyPackages.${pkgs.stdenv.hostPlatform.system}.plasma-foreground-booster
   ];
 
   # For keeb
@@ -185,7 +179,6 @@
     });
   };
 
-  # For rivalcfg
   services.udev.packages = [ pkgs.rivalcfg ];
 
   # For onlyoffice
@@ -193,13 +186,11 @@
     corefonts
   ];
 
-  # --- Use appimage-run for AppImage ---
   programs.appimage = {
     enable = true;
     binfmt = true;
   };
 
-  # --- Steam ---
   services.tuned.enable = true;
   programs.gamemode.enable = true;
   programs.steam = {
@@ -213,14 +204,15 @@
     };
   };
 
-  # --- VR support ---
   services.wivrn = {
     enable = true;
     openFirewall = true;
+    package = inputs.nixpkgs-small.legacyPackages.${pkgs.stdenv.hostPlatform.system}.wivrn;
   };
 
 
-  # --- ZSWAP Device ---
+
+  # ZSWAP Device
   fileSystems."/swap" = {
     device = "/dev/disk/by-uuid/0ae15a10-33cf-4d69-a3df-b8b635dd902e";
     fsType = "btrfs";
@@ -231,7 +223,6 @@
     device = "/swap/swapfile";
   } ];
 
-  # --- Graphics ---
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
@@ -241,7 +232,6 @@
     ];
   };
 
-  # Enable nix-ld (needed for running pip wheels)
   programs.nix-ld.enable = true;
   programs.nix-ld.libraries = with pkgs; [
     stdenv.cc.cc
@@ -254,10 +244,12 @@
     expat
   ];
 
-  # --- dmemcg VRAM Optimization ---
+  services.lact.enable = true;
+
+  # dmemcg VRAM Optimization
   systemd.packages = [
-    inputs.jovian-nixos.legacyPackages.${pkgs.system}.dmemcg-booster
-    inputs.jovian-nixos.legacyPackages.${pkgs.system}.plasma-foreground-booster
+    inputs.jovian-nixos.legacyPackages.${pkgs.stdenv.hostPlatform.system}.dmemcg-booster
+    inputs.jovian-nixos.legacyPackages.${pkgs.stdenv.hostPlatform.system}.plasma-foreground-booster
   ];
 
   systemd.services.dmemcg-booster-system = {
@@ -268,7 +260,6 @@
     wantedBy = [ "graphical-session-pre.target" ];
   };
 
-  # --- Standard stuff ---
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   system.stateVersion = "25.05";
 }
